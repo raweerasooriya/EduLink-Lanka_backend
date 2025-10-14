@@ -65,6 +65,13 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: false, // Only required for teachers
   },
+
+  // Add teacher reference field to link students with their assigned teacher
+  teacher: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'User',
+  required: false, // Reference to teacher user
+},
 });
 
 module.exports = mongoose.model('User', UserSchema);

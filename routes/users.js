@@ -56,37 +56,31 @@ router.get('/', auth, async (req, res) => {
   try {
     const { search, role, grade, section } = req.query;
     let query = {};
-    
+
     // Role filter
-    if (role) {
-      query.role = role;
-    }
-    
-    // Grade and section filters
-    if (grade) {
-      query.grade = grade;
-    }
-    if (section) {
-      query.section = section;
-    }
-    
-    // Search filter
-    if (search) {
-      const rx = { $regex: search, $options: 'i' };
+    if (role) query.role = role;
+
+    // Grade & section filters
+    if (grade) query.grade = grade;
+    if (section) query.section = section;
+
+    // Search filter: only add regex on string fields if search exists
+    if (search && search.trim() !== "") {
+      const rx = { $regex: search.trim(), $options: "i" };
       const searchQuery = {
         $or: [
-          { name: rx }, 
-          { email: rx }, 
-          { username: rx }, 
-          { mobile: rx }, // Added mobile number search
+          { name: rx },
+          { email: rx },
+          { username: rx },
+          { mobile: rx },
           { role: rx },
           { grade: rx },
           { section: rx },
           { subject: rx },
-          { parent: rx }
+          // parent is ObjectId, cannot use regex on it
         ],
       };
-      
+
       // Combine role/grade/section filters with search
       if (role || grade || section) {
         query = { $and: [query, searchQuery] };
@@ -95,21 +89,25 @@ router.get('/', auth, async (req, res) => {
       }
     }
 
-    // Use populate to include parent information
-    const users = await User.find(query).populate('parent', 'name email').lean();
-    
+    // Fetch users & populate parent info
+    const users = await User.find(query)
+      .populate('parent', 'name email')
+      .lean();
+
+    // Remove sensitive fields
     const safe = users.map(u => {
       delete u.password;
       delete u.__v;
       return u;
     });
-    
+
     return res.json(safe);
   } catch (err) {
     console.error("Users fetch error:", err);
-    return res.status(500).json({ msg: 'Server Error', error: err.message });
+    return res.status(500).json({ msg: "Server Error", error: err.message });
   }
 });
+
 
 // == READ ==
 // Get children for a parent user
@@ -390,6 +388,36 @@ router.post('/verify-email', async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).send('Server error');
+  }
+});
+
+// API route to get all students assigned to the current teacher
+router.get('/teacher/students', auth, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    
+    // Verify the user is a teacher
+    const teacher = await User.findById(teacherId);
+    if (!teacher || teacher.role !== 'Teacher') {
+      return res.status(403).json({ msg: 'Access denied. Teacher role required.' });
+    }
+    
+    // Find all students assigned to this teacher
+    const students = await User.find({ 
+      teacher: teacherId, 
+      role: 'Student' 
+    }).populate('parent', 'name email').lean();
+    
+    // Format the response
+    const formattedStudents = students.map(student => {
+      const { password, __v, ...safeStudent } = student;
+      return safeStudent;
+    });
+    
+    res.json(formattedStudents);
+  } catch (err) {
+    console.error("Get teacher students error:", err);
+    res.status(500).json({ msg: 'Server Error', error: err.message });
   }
 });
 
