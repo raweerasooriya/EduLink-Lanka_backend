@@ -1,12 +1,15 @@
 // routes/auth.js
+// This file handles all API routes related to user management, including registration, login, profile updates, and admin actions.
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// ---- helpers ---------------------------------------------------------------
+// ---- HELPERS & MIDDLEWARE ---------------------------------------------------
 
+// Safety check for JWT secret key
 function requireJwtSecret() {
   if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is not set');
@@ -14,6 +17,7 @@ function requireJwtSecret() {
   return process.env.JWT_SECRET;
 }
 
+// Creates a JWT login token
 function generateToken(payload, expiresIn = '1h') {
   return jwt.sign(payload, requireJwtSecret(), { expiresIn });
 }
@@ -28,6 +32,8 @@ function sanitizeUser(userDoc) {
 }
 
 // Single auth middleware (removed duplicate)
+// Security guard (middleware) to protect routes. Checks for a valid login token.
+
 const auth = (req, res, next) => {
   const token = req.header('x-auth-token');
   if (!token) {
@@ -42,8 +48,9 @@ const auth = (req, res, next) => {
   }
 };
 
-// ---- routes ----------------------------------------------------------------
+// ---- API ROUTES (CRUD OPERATIONS) --------------------------------------------
 
+// == READ ==
 // Get all users (searchable)
 router.get('/', auth, async (req, res) => {
   try {
@@ -104,6 +111,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// == READ ==
 // Get children for a parent user
 router.get('/children', auth, async (req, res) => {
   try {
@@ -144,6 +152,7 @@ router.get('/children', auth, async (req, res) => {
   }
 });
 
+// == READ ==
 // Get parent profile with children
 router.get('/parent/profile', auth, async (req, res) => {
   try {
@@ -188,6 +197,7 @@ router.get('/parent/profile', auth, async (req, res) => {
   }
 });
 
+// == UPDATE / EDIT ==
 // Assign parent to student
 router.put('/assign-parent/:studentId', auth, async (req, res) => {
   try {
@@ -232,6 +242,7 @@ router.put('/assign-parent/:studentId', auth, async (req, res) => {
   }
 });
 
+// == CREATE ==
 // Register
 router.post('/register', async (req, res) => {
   try {
@@ -283,6 +294,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// == READ & VERIFY ==
 // Login (step 1): get profile image by username
 router.post('/login-step-one', async (req, res) => {
   try {
@@ -323,6 +335,7 @@ router.post('/login-step-two', async (req, res) => {
   }
 });
 
+// == UPDATE / EDIT ==
 // Update profile (authenticated)
 router.put('/profile', auth, async (req, res) => {
   try {
@@ -351,7 +364,8 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
-// Get own profile (authenticated)
+// == READ ==
+// Get the logged-in user's own profile
 router.get('/profile', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -362,6 +376,7 @@ router.get('/profile', auth, async (req, res) => {
   }
 });
 
+// == READ ==
 // Verify if email exists
 router.post('/verify-email', async (req, res) => {
   try {
@@ -378,6 +393,7 @@ router.post('/verify-email', async (req, res) => {
   }
 });
 
+// == UPDATE / EDIT ==
 // Password reset (INSECURE: username/email-only; prefer token-based flow)
 // TODO: Replace with a two-step flow (issue reset token via email, then verify token)
 router.post('/reset-password', async (req, res) => {
@@ -402,6 +418,7 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// == UPDATE / EDIT ==
 // Change password (authenticated)
 router.post('/change-password', auth, async (req, res) => {
   try {
@@ -427,6 +444,7 @@ router.post('/change-password', auth, async (req, res) => {
   }
 });
 
+// == DELETE ==
 // Delete account (authenticated)
 router.delete('/profile', auth, async (req, res) => {
   try {
@@ -441,7 +459,8 @@ router.delete('/profile', auth, async (req, res) => {
   }
 });
 
-// Admin: Update any user by ID (authenticated, admin only)
+// == UPDATE / EDIT ==
+// Update any user's profile by their ID (Admin only)
 router.put('/:id', auth, async (req, res) => {
   try {
     // Check if the requesting user has admin role
@@ -517,7 +536,8 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Admin: Delete any user by ID (authenticated, admin only)
+// == DELETE ==
+// Delete any user by their ID (Admin only)
 router.delete('/:id', auth, async (req, res) => {
   try {
     // Check if the requesting user has admin role

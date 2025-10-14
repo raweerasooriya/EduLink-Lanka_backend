@@ -1,3 +1,16 @@
+/**
+ * IT23337558 - Oshada W G D 
+ * This file defines the API route for creating a Stripe payment session.
+ *
+ * It receives payment details (amount, description) from the client-side,
+ * communicates with the Stripe API to generate a secure, hosted checkout page,
+ * and returns the URL of that page to the client for redirection.
+ *
+ * This allows users to make payments without their sensitive card details
+ * ever touching our server, ensuring PCI compliance.
+ */
+
+
 const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_51S4brZ8HfEknvOjMj4WwaAEOi6PY2W3hVsXGMPbRPrM5sGCeXnWzqZDDTwoqPfQEO5korL6wbFMpr0z4tJH9lLEI00xbweJrXN');

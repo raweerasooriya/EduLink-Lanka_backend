@@ -1,8 +1,19 @@
+/**
+ * IT23168190 - R A WEERASOORIYA
+ * This file defines the API routes for handling admission applications.
+ * It allows for creating new applications, viewing all applications,
+ * and updating the status of an existing application.
+ *
+ * This connects the frontend admission form to the backend database,
+ * managing the entire application workflow.
+ */
+
 const express = require('express');
 const router = express.Router();
 const Admission = require('../models/Admission');
 
-
+// == CREATE ==
+// Handles the creation of a new admission application when a user submits the form.
 // POST /admissions - create new admission application
 router.post('/', async (req, res) => {
   try {
@@ -15,6 +26,8 @@ router.post('/', async (req, res) => {
   }
 });
 
+// == READ ==
+// Retrieves a list of all admission applications, typically for an admin to review.
 // GET /admissions - list all applications
 router.get('/', async (req, res) => {
   try {
@@ -25,6 +38,8 @@ router.get('/', async (req, res) => {
   }
 });
 
+// == UPDATE ==
+// Updates the status of a specific application (e.g., to 'Accepted' or 'Rejected').
 // PATCH /admissions/:id/status - update application status
 router.patch('/:id/status', async (req, res) => {
   try {

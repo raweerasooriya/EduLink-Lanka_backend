@@ -1,5 +1,5 @@
-
-
+//
+//
 const express = require('express');
 const router = express.Router();
 const csv = require('csv-express');
@@ -38,6 +38,18 @@ function stringify(value) {
   return String(value);
 }
 
+/**
+ * IT23646292 - Wathsana P S S 
+ * This route generates a custom, downloadable PDF 'Result Slip' (report card)
+ * for a specific student.
+ *
+ * It works by:
+ * 1. Fetching the student's details and all their academic results from the database.
+ * 2. Performing a security check to ensure a parent can only access their own child's report.
+ * 3. Using the `pdfkit` library to dynamically build a professional-looking PDF document.
+ * 4. Formatting the content with a title, student info, a results table, and a summary.
+ * 5. Streaming the final PDF to the user's browser, prompting a file download.
+ */
 // Generate a PDF result slip for a single student
 router.get('/result-slip/:studentId', auth, async (req, res) => {
   const { studentId } = req.params;
@@ -160,6 +172,25 @@ router.get('/result-slip/:studentId', auth, async (req, res) => {
   }
 });
 
+
+/**
+ * IT23168190 - R A WEERASOORIYA
+ * IT23337558 - Oshada W G D 
+ * IT23621374 - Brundhaban.J 
+ * IT23569454 - De Silva K.S.D 
+ * IT23646292 - Wathsana P S S 
+ * This is a versatile and powerful data export route that acts as a
+ * general-purpose report generator for the application.
+ *
+ * It works by:
+ * 1.  Accepting a report 'type' from the URL (e.g., 'students', 'fees', 'results').
+ * 2.  Accepting a desired file 'format' from a query parameter (e.g., '?format=pdf' or '?format=csv').
+ * 3.  Fetching the corresponding data from the database based on the 'type'.
+ * 4.  Dynamically generating either:
+ * a) A professionally formatted, multi-page PDF document with tables, headers, and footers.
+ * b) A simple CSV file suitable for spreadsheets like Excel.
+ * 5.  Streaming the generated file to the user's browser for download.
+ */
 router.get('/:type', async (req, res) => {
   const { type } = req.params;
   const { format } = req.query;
@@ -167,35 +198,52 @@ router.get('/:type', async (req, res) => {
   let filename;
 
   try {
+    // This switch statement checks the 'type' from the URL to decide which data to fetch.
     switch (type) {
+
+      // Handles the 'students' report type.
       case 'students':
         data = await User.find({ role: 'Student' }).populate('parent', 'name email').lean();
         filename = 'students';
         break;
+
+      // Handles the 'teachers' report type.
       case 'teachers':
         data = await User.find({ role: 'Teacher' }).lean();
         filename = 'teachers';
         break;
+
+      // Handles the 'parents' report type.
       case 'parents':
         data = await User.find({ role: 'Parent' }).lean();
         filename = 'parents';
         break;
+      
+      // Handles the 'fees' report type.
       case 'fees':
         data = await Fee.find().lean();
         filename = 'fees';
         break;
+      
+      // Handles the 'results' report type.
       case 'results':
         data = await Result.find().lean();
         filename = 'results';
         break;
+
+      // Handles the 'notices' report type.
       case 'notices':
         data = await Notice.find().lean();
         filename = 'notices';
         break;
+
+      // Handles the 'timetable' report type.
       case 'timetable':
         data = await Timetable.find().lean();
         filename = 'timetable';
         break;
+
+      
       default:
         return res.status(400).json({ msg: 'Invalid report type' });
     }
@@ -204,6 +252,18 @@ router.get('/:type', async (req, res) => {
       return res.status(404).json({ msg: 'No data found for this report type' });
     }
 
+    /**
+     * This block of code is a sophisticated PDF report generator.
+     * Its main job is to take a set of data and dynamically build a professional,
+     * multi-page PDF document with a well-formatted table.
+     *
+     * Key Features:
+     * 1.  **Smart Orientation:** It automatically switches to landscape mode if the table has too many columns.
+     * 2.  **Dynamic Column Sizing:** It analyzes the data to intelligently calculate the best width for each column.
+     * 3.  **Professional Theming:** It applies a clean visual theme with colored headers and alternating row colors (zebra striping).
+     * 4.  **Multi-Page Handling:** It automatically adds new pages, redraws the table header, and includes page numbers in the footer for long reports.
+     * 5.  **Streaming:** It streams the generated PDF directly to the user's browser for an efficient download.
+     */
     if (format === 'pdf') {
       // === Improved PDF ===
       // Decide orientation based on column count

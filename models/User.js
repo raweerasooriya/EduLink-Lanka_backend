@@ -1,3 +1,17 @@
+/**
+ * IT23168190 - R A WEERASOORIYA
+ * This file defines the Mongoose schema, which is the blueprint for how
+ * a 'User' is structured in the MongoDB database.
+ *
+ * It handles:
+ * 1.  Basic user information (name, email, password).
+ * 2.  Different user types using a 'role' field (Admin, Teacher, Student, Parent).
+ * 3.  Role-specific fields, like 'grade' for a student or 'subject' for a teacher.
+ * 4.  A relationship that links a 'Student' user to their 'Parent' user.
+ *
+ * This schema is then exported as a 'User' model, which is used to
+ * create, read, update, and delete users in the database.
+ */
 
 const mongoose = require('mongoose');
 
