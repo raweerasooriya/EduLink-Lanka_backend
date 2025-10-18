@@ -174,11 +174,6 @@ router.get('/result-slip/:studentId', auth, async (req, res) => {
 
 
 /**
- * IT23168190 - R A WEERASOORIYA
- * IT23337558 - Oshada W G D 
- * IT23621374 - Brundhaban.J 
- * IT23569454 - De Silva K.S.D 
- * IT23646292 - Wathsana P S S 
  * This is a versatile and powerful data export route that acts as a
  * general-purpose report generator for the application.
  *

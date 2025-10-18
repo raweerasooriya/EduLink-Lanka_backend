@@ -1,5 +1,4 @@
 /**
- * IT23168190 - R A WEERASOORIYA
  * This is an authentication middleware for Express.js routes.
  * It acts as a security guard to protect API endpoints.
  *
