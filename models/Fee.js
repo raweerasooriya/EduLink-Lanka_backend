@@ -13,7 +13,8 @@ const FeeSchema = new mongoose.Schema({
   },
   term: {
     type: String,
-    required: true,
+    required: false, // Changed to false
+    default: null,   // Add default value
   },
   amount: {
     type: Number,
@@ -28,13 +29,19 @@ const FeeSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  feeType: {  // Add this new field
+    type: String,
+    enum: ['Term Fee', 'Registration Fee', 'Other Fee'],
+    required: true,
+    default: 'Term Fee'
+  },
   paymentMethod: {
     type: String,
     enum: ['CARD', 'BANK', 'CASH'],
     required: false,
   },
   paymentSlip: {
-    type: String, // Base64 encoded image or file path
+    type: String,
     required: false,
   },
   paymentSlipOriginalName: {
@@ -50,7 +57,7 @@ const FeeSchema = new mongoose.Schema({
     required: false,
   },
   verifiedBy: {
-    type: String, // Admin who verified the payment
+    type: String,
     required: false,
   },
   verificationDate: {
@@ -58,7 +65,7 @@ const FeeSchema = new mongoose.Schema({
     required: false,
   },
   notes: {
-    type: String, // Admin notes about the payment
+    type: String,
     required: false,
   }
 });
