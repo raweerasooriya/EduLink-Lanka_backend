@@ -108,6 +108,26 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// == READ ==
+// Check if username already exists
+router.get('/check-username/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    if (!username) {
+      return res.status(400).json({ exists: false, msg: 'Username is required' });
+    }
+
+    const user = await User.findOne({ username });
+    
+    return res.json({ 
+      exists: !!user 
+    });
+  } catch (err) {
+    console.error("Check username error:", err);
+    return res.status(500).json({ exists: false, msg: 'Server error' });
+  }
+});
 
 // == READ ==
 // Get children for a parent user
